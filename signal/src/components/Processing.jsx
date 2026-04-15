@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { recordCompletion } from '../services/completions'
 import { scoreResponses } from '../services/scoring'
 
 const SUBTEXTS = ['Mapping your circuit.', 'Locating the pattern.', 'Assembling your reading.']
@@ -27,6 +28,11 @@ export function Processing({ responseVector, onDone, onBack }) {
           scoreResponses(responseVector),
           minWait,
         ]).then(([d]) => d)
+        if (cancelled) return
+        await recordCompletion({
+          dominant_quadrant: diagnostic?.dominant_quadrant ?? null,
+          texture: diagnostic?.texture ?? null,
+        })
         if (!cancelled) onDone(diagnostic)
       } catch (e) {
         if (!cancelled) setError(e?.message || 'Unable to read your signal.')

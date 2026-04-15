@@ -330,6 +330,21 @@ response_vector jsonb
 created_at timestamptz default now()
 ```
 
+**Supabase table: `signal_completions`** (drop-off analytics — no PII)
+
+One row per **successful scoring** (before the email gate). Compare row counts with `signal_leads` to measure email-step drop-off.
+
+```sql
+create table public.signal_completions (
+  id uuid primary key default gen_random_uuid(),
+  dominant_quadrant text,
+  texture text,
+  created_at timestamptz default now()
+);
+```
+
+**Implementation:** `api/record-completion.mjs` inserts via **service role** on production; `signal/src/services/completions.js` runs immediately after the scoring response returns, **before** the email gate. Optional env: **`VITE_SUPABASE_COMPLETIONS_TABLE`** / **`SUPABASE_COMPLETIONS_TABLE`** if you rename the table.
+
 **Cursor / MCP:** To connect this workspace to Supabase for verification and schema work from the editor, see **README.md** → *Supabase in Cursor (MCP)* and **`.cursor/mcp.json.example`**.
 
 **Implementation note:** Rows go into **`signal_leads`** by default. If your table is named **`leads`**, set **`VITE_SUPABASE_LEADS_TABLE=leads`** (and the same for server env **`SUPABASE_LEADS_TABLE`** if you use it) in `signal/.env` and Vercel, then redeploy. **Production (Vercel):** `api/save-lead.mjs` inserts with the **service role** (see env table), so captures work even if **anon** `INSERT` is restricted. **Local `npm run dev`:** the client still uses the **anon** key; keep an **`anon` INSERT** policy for local testing, or use `vercel dev` to exercise the server route.
@@ -707,6 +722,7 @@ signal/
 │   │   └── reportTemplates.js
 │   ├── services/
 │   │   ├── scoring.js      (OpenAI API call)
+│   │   ├── completions.js  (signal_completions — post-score, no PII)
 │   │   └── supabase.js     (email capture)
 │   └── hooks/
 │       └── useAssessment.js
@@ -743,7 +759,7 @@ Optional: `VITE_USE_API_PROXY=false` — forces client-side OpenAI even in a pro
 
 ## Vercel deployment
 
-Repo layout: **Git root = `SignalApp/`** (this folder). The Vite app is in **`signal/`**. Vercel is configured at the repo root via **`vercel.json`**: install runs `npm install --prefix signal --legacy-peer-deps` (required because `vite-plugin-pwa@1.x` does not yet declare a peer range for Vite 8), build is `signal/`, output is **`signal/dist`**, **`api/score.mjs`** implements `POST /api/score`, and **`api/save-lead.mjs`** implements `POST /api/save-lead` (Supabase lead insert with service role). Local installs also respect **`signal/.npmrc`** (`legacy-peer-deps=true`).
+Repo layout: **Git root = `SignalApp/`** (this folder). The Vite app is in **`signal/`**. Vercel is configured at the repo root via **`vercel.json`**: install runs `npm install --prefix signal --legacy-peer-deps` (required because `vite-plugin-pwa@1.x` does not yet declare a peer range for Vite 8), build is `signal/`, output is **`signal/dist`**, **`api/score.mjs`** implements `POST /api/score`, **`api/save-lead.mjs`** implements `POST /api/save-lead` (Supabase lead insert with service role), and **`api/record-completion.mjs`** implements `POST /api/record-completion` (anonymous **`signal_completions`** rows for funnel analytics). Local installs also respect **`signal/.npmrc`** (`legacy-peer-deps=true`).
 
 **Steps**
 
@@ -751,7 +767,7 @@ Repo layout: **Git root = `SignalApp/`** (this folder). The Vite app is in **`si
 2. In [Vercel](https://vercel.com), **Add New Project** → import the repo.
 3. Leave **Root Directory** as **`.`** (repository root). Do **not** set Root Directory to `signal` unless you move `vercel.json` and `api/` under `signal` and adjust paths.
 4. **Environment variables:** add `OPENAI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY` (see table above). Redeploy after changing secrets.
-5. Deploy. Smoke test: complete the assessment → Processing should succeed; email step should insert into **`signal_leads`** via **`/api/save-lead`** (check the table in Supabase).
+5. Deploy. Smoke test: complete the assessment → Processing should succeed and append a row to **`signal_completions`** via **`/api/record-completion`**; the email step should insert into **`signal_leads`** via **`/api/save-lead`** (check both tables in Supabase).
 
 **Local parity with production:** `npx vercel dev` from repository root runs the static app and `/api/score` together; set `OPENAI_API_KEY` in `.env.local` at repo root (Vercel convention) or export it in the shell.
 
