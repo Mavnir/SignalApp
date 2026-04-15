@@ -43,8 +43,20 @@ function splitParagraphs(text) {
   ))
 }
 
+function ArchetypeTag({ label }) {
+  if (!label?.trim()) return null
+  return (
+    <div className="mx-auto max-w-2xl px-6 pt-6">
+      <span className="inline-block rounded border border-accent-gold/45 bg-bg-primary px-4 py-2 text-[10px] font-medium uppercase tracking-[0.22em] text-accent-gold/75">
+        {label.trim()}
+      </span>
+    </div>
+  )
+}
+
 export function Report({ diagnostic }) {
   const template = matchReportTemplate(diagnostic.texture, diagnostic.dominant_quadrant)
+  const archetypeLabel = (diagnostic.archetype || template.archetype || '').trim()
 
   return (
     <div className="pb-24 pt-10">
@@ -54,6 +66,8 @@ export function Report({ diagnostic }) {
         </p>
         <CircuitMap diagnostic={diagnostic} />
       </Section>
+
+      <ArchetypeTag label={archetypeLabel} />
 
       <Section label="WHAT'S WORKING">{splitParagraphs(template.whatsWorking)}</Section>
 
