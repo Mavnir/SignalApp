@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Cormorant Garamond', serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-bg-primary: #0a0a0f;
+  --color-bg-secondary: #12121a;
+  --color-bg-tertiary: #1a1a2e;
+  --color-accent-gold: #c9a84c;
+  --color-accent-blue: #4a6fa5;
+  --color-accent-glow: #6b8fd4;
+  --color-text-primary: #e8e8f0;
+  --color-text-secondary: #9090a8;
+  --color-text-dim: #555568;
+  --color-q1: #4a6fa5;
+  --color-q2: #c9a84c;
+  --color-q3: #4a9b6f;
+  --color-q4: #8b5fa5;
+}
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-tertiary: #1a1a2e;
+  --accent-gold: #c9a84c;
+  --accent-blue: #4a6fa5;
+  --accent-glow: #6b8fd4;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9090a8;
+  --text-dim: #555568;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+@keyframes signal-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.45;
+    box-shadow: 0 0 40px rgba(201, 168, 76, 0.15);
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.9;
+    box-shadow: 0 0 72px rgba(201, 168, 76, 0.35);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.animate-signal-breathe {
+  animation: signal-breathe 4s ease-in-out infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+.fade-step {
+  transition: opacity 300ms ease;
+}

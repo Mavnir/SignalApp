@@ -1,0 +1,10 @@
+{
+  "name": "signal-app-root",
+  "private": true,
+  "description": "Vercel project root; the Vite app lives in signal/.",
+  "scripts": {
+    "build": "npm run build --prefix signal",
+    "dev": "npm run dev --prefix signal",
+    "lint": "npm run lint --prefix signal"
+  }
+}

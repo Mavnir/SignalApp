@@ -1,0 +1,13 @@
+.vercel
+node_modules
+signal/node_modules
+signal/dist
+*.log
+.DS_Store
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+signal/.env
+signal/.env.*
