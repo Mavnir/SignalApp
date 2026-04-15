@@ -738,7 +738,7 @@ Optional: `VITE_USE_API_PROXY=false` — forces client-side OpenAI even in a pro
 
 ## Vercel deployment
 
-Repo layout: **Git root = `SignalApp/`** (this folder). The Vite app is in **`signal/`**. Vercel is configured at the repo root via **`vercel.json`**: install and build run inside `signal/`, static output is `signal/dist`, and **`api/score.mjs`** implements `POST /api/score` so the browser never sends your OpenAI secret.
+Repo layout: **Git root = `SignalApp/`** (this folder). The Vite app is in **`signal/`**. Vercel is configured at the repo root via **`vercel.json`**: install runs `npm install --prefix signal --legacy-peer-deps` (required because `vite-plugin-pwa@1.x` does not yet declare a peer range for Vite 8), build is `signal/`, output is **`signal/dist`**, and **`api/score.mjs`** implements `POST /api/score` so the browser never sends your OpenAI secret. Local installs also respect **`signal/.npmrc`** (`legacy-peer-deps=true`).
 
 **Steps**
 
