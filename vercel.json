@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm install --prefix signal",
+  "installCommand": "npm install --prefix signal --legacy-peer-deps",
   "buildCommand": "npm run build --prefix signal",
   "outputDirectory": "signal/dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
