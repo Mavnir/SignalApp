@@ -56,7 +56,7 @@ function ArchetypeTag({ label }) {
 
 export function Report({ diagnostic }) {
   const template = matchReportTemplate(diagnostic.texture, diagnostic.dominant_quadrant)
-  const archetypeLabel = (diagnostic.archetype || template.archetype || '').trim()
+  const archetypeLabel = (template.archetype || '').trim()
 
   return (
     <div className="pb-24 pt-10">
