@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { matchReportTemplate } from '../data/reportTemplates'
 import { saveLead } from '../services/supabase'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -18,13 +19,20 @@ export function EmailGate({ diagnostic, responseVector, onContinue }) {
     }
     setBusy(true)
     try {
-      await saveLead({
+      const template = matchReportTemplate(diagnostic.texture, diagnostic.dominant_quadrant)
+      const result = await saveLead({
         email: trimmed,
         dominant_quadrant: diagnostic.dominant_quadrant,
         texture: diagnostic.texture,
-        archetype: diagnostic.archetype,
+        archetype: template.archetype,
         response_vector: responseVector,
       })
+      if (result?.skipped) {
+        setErr(
+          'Email was not saved: Supabase URL or anon key is missing in this environment. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel (or local .env), redeploy, and try again.',
+        )
+        return
+      }
       onContinue()
     } catch (e) {
       setErr(e?.message || 'Could not save. Check your connection and try again.')

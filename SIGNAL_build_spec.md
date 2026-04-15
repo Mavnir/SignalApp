@@ -330,6 +330,10 @@ response_vector jsonb
 created_at timestamptz default now()
 ```
 
+**Cursor / MCP:** To connect this workspace to Supabase for verification and schema work from the editor, see **README.md** → *Supabase in Cursor (MCP)* and **`.cursor/mcp.json.example`**.
+
+**Implementation note:** Rows go into **`signal_leads`** by default. If your table is named **`leads`**, set **`VITE_SUPABASE_LEADS_TABLE=leads`** (and the same for server env **`SUPABASE_LEADS_TABLE`** if you use it) in `signal/.env` and Vercel, then redeploy. **Production (Vercel):** `api/save-lead.mjs` inserts with the **service role** (see env table), so captures work even if **anon** `INSERT` is restricted. **Local `npm run dev`:** the client still uses the **anon** key; keep an **`anon` INSERT** policy for local testing, or use `vercel dev` to exercise the server route.
+
 ---
 
 ### Screen 5 — Report
@@ -730,23 +734,24 @@ Optional: `VITE_USE_API_PROXY=false` — forces client-side OpenAI even in a pro
 | Name | Environment | Notes |
 |------|-------------|--------|
 | `OPENAI_API_KEY` | Production (and Preview if you test there) | **Server only.** Used by `api/score.mjs`. Do **not** rely on `VITE_OPENAI_API_KEY` for production scoring (OpenAI blocks browser CORS on deployed origins). |
-| `VITE_SUPABASE_URL` | Production, Preview | Client |
-| `VITE_SUPABASE_ANON_KEY` | Production, Preview | Client |
+| `SUPABASE_SERVICE_ROLE_KEY` | Production, Preview | **Server only.** Used by `api/save-lead.mjs` so lead rows are inserted reliably (bypasses RLS). From Supabase → **Settings → API → service_role** (never prefix with `VITE_`). |
+| `VITE_SUPABASE_URL` | Production, Preview | Same project URL as in Supabase; used by the client **and** read by `api/save-lead.mjs` on the server. |
+| `VITE_SUPABASE_ANON_KEY` | Production, Preview | Client (local dev lead save if you do not use `vercel dev`). |
 | `VITE_GEMINI_API_KEY` | Optional | Reserved for future experiments |
 
 ---
 
 ## Vercel deployment
 
-Repo layout: **Git root = `SignalApp/`** (this folder). The Vite app is in **`signal/`**. Vercel is configured at the repo root via **`vercel.json`**: install runs `npm install --prefix signal --legacy-peer-deps` (required because `vite-plugin-pwa@1.x` does not yet declare a peer range for Vite 8), build is `signal/`, output is **`signal/dist`**, and **`api/score.mjs`** implements `POST /api/score` so the browser never sends your OpenAI secret. Local installs also respect **`signal/.npmrc`** (`legacy-peer-deps=true`).
+Repo layout: **Git root = `SignalApp/`** (this folder). The Vite app is in **`signal/`**. Vercel is configured at the repo root via **`vercel.json`**: install runs `npm install --prefix signal --legacy-peer-deps` (required because `vite-plugin-pwa@1.x` does not yet declare a peer range for Vite 8), build is `signal/`, output is **`signal/dist`**, **`api/score.mjs`** implements `POST /api/score`, and **`api/save-lead.mjs`** implements `POST /api/save-lead` (Supabase lead insert with service role). Local installs also respect **`signal/.npmrc`** (`legacy-peer-deps=true`).
 
 **Steps**
 
 1. Push this repo to GitHub (or GitLab / Bitbucket).
 2. In [Vercel](https://vercel.com), **Add New Project** → import the repo.
 3. Leave **Root Directory** as **`.`** (repository root). Do **not** set Root Directory to `signal` unless you move `vercel.json` and `api/` under `signal` and adjust paths.
-4. **Environment variables:** add `OPENAI_API_KEY`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY` (see table above). Redeploy after changing secrets.
-5. Deploy. Smoke test: complete the assessment → Processing should succeed; email step should insert into Supabase if `signal_leads` exists and RLS allows anon insert.
+4. **Environment variables:** add `OPENAI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY` (see table above). Redeploy after changing secrets.
+5. Deploy. Smoke test: complete the assessment → Processing should succeed; email step should insert into **`signal_leads`** via **`/api/save-lead`** (check the table in Supabase).
 
 **Local parity with production:** `npx vercel dev` from repository root runs the static app and `/api/score` together; set `OPENAI_API_KEY` in `.env.local` at repo root (Vercel convention) or export it in the shell.
 

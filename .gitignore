@@ -11,3 +11,6 @@ signal/dist
 !.env.example
 signal/.env
 signal/.env.*
+
+# Cursor MCP (copy from .cursor/mcp.json.example; contains secrets)
+.cursor/mcp.json
